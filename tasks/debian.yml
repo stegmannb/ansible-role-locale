@@ -1,0 +1,8 @@
+---
+- name: Update locale.conf file.
+  template:
+    dest: /etc/default/locale
+    src: locale.conf.j2
+    owner: root
+    group: root
+    mode: "0604"

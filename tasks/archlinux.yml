@@ -1,0 +1,36 @@
+---
+- name: Update locale.conf file.
+  template:
+    dest: /etc/locale.conf
+    src: locale.conf.j2
+    owner: root
+    group: root
+    mode: "0604"
+
+- name: Check if default user exists.
+  getent:
+    database: passwd
+    key: "{{ default_user }}"
+
+- name: Register default user's account information.
+  ansible.builtin.user:
+    name: "{{ default_user }}"
+  register: default_user_result
+
+- name: Check if the KDE settings override locale.conf.
+  stat:
+    path: "{{ default_user_result.home }}/.config/plasma-localerc"
+  become: true
+  register: plasma_localerc
+
+- name: Update KDE locale settings.
+  community.general.ini_file:
+    path: "{{ default_user_result.home }}/.config/plasma-localerc"
+    section: Formats
+    option: LANG
+    value: "{{ LANG }}"
+    no_extra_spaces: true
+    create: false
+  when: plasma_localerc.stat.exists
+  become: true
+  become_user: "{{ default_user }}"
